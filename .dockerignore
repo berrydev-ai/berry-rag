@@ -70,3 +70,16 @@ yarn-error.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Playwright
+.playwright/
+playwright-report/
+test-results/
+*.mp4
+*.webm
+*.png
+*.jpg
+*.jpeg
+*.gif
+screenshots/
+videos/

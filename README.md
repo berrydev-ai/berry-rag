@@ -17,7 +17,8 @@ A complete local RAG (Retrieval-Augmented Generation) system that integrates Pla
 ### 1. Installation
 
 ```bash
-cd /Users/eberry/BerryDev/berry-rag
+git clone https://github.com/berrydev-ai/berry-rag.git
+cd berry-rag
 
 # Install dependencies
 npm run install-deps
