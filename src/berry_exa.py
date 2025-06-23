@@ -46,6 +46,9 @@ class ExaResult:
     highlightScores: Optional[List[float]] = None
     subpages: Optional[List[Dict]] = None
     extras: Optional[Dict[str, Any]] = None
+    depth: int = 0
+    parent_url: Optional[str] = None
+    crawl_path: Optional[List[str]] = None
     
     def __post_init__(self):
         if self.highlights is None:
@@ -56,6 +59,8 @@ class ExaResult:
             self.subpages = []
         if self.extras is None:
             self.extras = {"links": []}
+        if self.crawl_path is None:
+            self.crawl_path = [self.url]
 
 @dataclass
 class ExaResponse:
@@ -120,27 +125,26 @@ class ReadabilityExtractor:
             base_domain = urlparse(base_url).netloc
             
             for link in soup.find_all('a', href=True):
-                if hasattr(link, 'get'):
-                    href = link.get('href')
-                    if not href:
-                        continue
-                        
-                    # Convert relative URLs to absolute
-                    href_str = str(href) if href else ""
-                    if not href_str:
-                        continue
-                        
-                    full_url = urljoin(base_url, href_str)
-                    link_domain = urlparse(full_url).netloc
+                href = link.get('href')
+                if not href:
+                    continue
                     
-                    # Only include internal links
-                    if link_domain == base_domain:
-                        link_text = link.get_text().strip()
-                        if link_text and len(link_text) > 3:
-                            links.append({
-                                'url': full_url,
-                                'text': link_text[:100]  # Limit text length
-                            })
+                # Convert relative URLs to absolute
+                href_str = str(href) if href else ""
+                if not href_str:
+                    continue
+                    
+                full_url = urljoin(base_url, href_str)
+                link_domain = urlparse(full_url).netloc
+                
+                # Only include internal links
+                if link_domain == base_domain:
+                    link_text = link.get_text().strip()
+                    if link_text and len(link_text) > 3:
+                        links.append({
+                            'url': full_url,
+                            'text': link_text[:100]  # Limit text length
+                        })
             
             return links[:20]  # Limit number of links
             
@@ -440,6 +444,273 @@ class BerryExaSystem:
         context_parts.append(f"\n## Full Content\n{result.text}")
         
         return "\n".join(context_parts)
+    
+    async def get_contents_with_subpages(
+        self, 
+        url: str, 
+        subpages: int = 0, 
+        subpage_target: Optional[List[str]] = None,
+        max_depth: int = 3,
+        add_to_rag: bool = False
+    ) -> ExaResponse:
+        """Enhanced method to get contents with subpage support"""
+        request_id = str(uuid.uuid4())
+        all_results = []
+        all_statuses = []
+        
+        try:
+            # First, crawl the main page
+            main_response = await self.get_contents(url, add_to_rag=add_to_rag)
+            
+            if not main_response.results:
+                return main_response
+            
+            main_result = main_response.results[0]
+            all_results.append(main_result)
+            if main_response.statuses:
+                all_statuses.extend(main_response.statuses)
+            
+            # If subpages requested, crawl them
+            if subpages > 0:
+                subpage_results = await self._crawl_subpages(
+                    main_result, subpages, subpage_target, max_depth, add_to_rag
+                )
+                all_results.extend(subpage_results['results'])
+                all_statuses.extend(subpage_results['statuses'])
+            
+            # Generate combined context
+            context = self._format_combined_context(all_results)
+            
+            return ExaResponse(
+                requestId=request_id,
+                results=all_results,
+                context=context,
+                statuses=all_statuses
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Error in subpage crawling: {e}")
+            return ExaResponse(
+                requestId=request_id,
+                results=[],
+                statuses=[{"id": url, "status": "error", "error": str(e)}]
+            )
+    
+    async def _crawl_subpages(
+        self, 
+        main_result: ExaResult, 
+        max_subpages: int,
+        keyword_targets: Optional[List[str]],
+        max_depth: int,
+        add_to_rag: bool
+    ) -> Dict[str, List]:
+        """Crawl subpages with keyword targeting and depth control"""
+        results = []
+        statuses = []
+        crawled_urls = {main_result.url}  # Track to avoid duplicates
+        
+        # Get links from main page
+        links = main_result.extras.get('links', []) if main_result.extras else []
+        
+        if not links:
+            logger.info("No links found for subpage crawling")
+            return {'results': results, 'statuses': statuses}
+        
+        # Score and filter links
+        scored_links = self._score_links(links, keyword_targets, main_result.url)
+        
+        # Limit to requested number of subpages
+        selected_links = scored_links[:max_subpages]
+        
+        logger.info(f"🔍 Selected {len(selected_links)} subpages to crawl")
+        
+        # Crawl subpages with rate limiting
+        for i, (link, score) in enumerate(selected_links):
+            if link['url'] in crawled_urls:
+                continue
+                
+            try:
+                # Rate limiting: 1 second delay between requests
+                if i > 0:
+                    await asyncio.sleep(1.0)
+                
+                logger.info(f"🕷️ Crawling subpage {i+1}/{len(selected_links)}: {link['url']}")
+                
+                subpage_response = await self.get_contents(link['url'], add_to_rag=add_to_rag)
+                
+                if subpage_response.results:
+                    subpage_result = subpage_response.results[0]
+                    # Add subpage metadata
+                    subpage_result.depth = 1
+                    subpage_result.parent_url = main_result.url
+                    subpage_result.crawl_path = [main_result.url, link['url']]
+                    
+                    results.append(subpage_result)
+                    crawled_urls.add(link['url'])
+                    
+                if subpage_response.statuses:
+                    statuses.extend(subpage_response.statuses)
+                
+            except Exception as e:
+                logger.error(f"Failed to crawl subpage {link['url']}: {e}")
+                statuses.append({
+                    "id": link['url'], 
+                    "status": "error", 
+                    "error": str(e)
+                })
+        
+        logger.info(f"✅ Completed subpage crawling: {len(results)} successful")
+        return {'results': results, 'statuses': statuses}
+    
+    def _score_links(
+        self, 
+        links: List[Dict[str, str]], 
+        keyword_targets: Optional[List[str]],
+        base_url: str
+    ) -> List[Tuple[Dict[str, str], float]]:
+        """Score links based on relevance and position"""
+        scored_links = []
+        
+        for i, link in enumerate(links):
+            score = 0.0
+            
+            # Position score (earlier links get higher scores)
+            position_score = 1.0 - (i / len(links)) * 0.3
+            score += position_score * 0.3
+            
+            # Keyword relevance score
+            if keyword_targets:
+                relevance_score = self._calculate_keyword_relevance(
+                    link, keyword_targets
+                )
+                score += relevance_score * 0.7
+            else:
+                # Default scoring without keywords
+                score += 0.5
+            
+            scored_links.append((link, score))
+        
+        # Sort by score (highest first)
+        scored_links.sort(key=lambda x: x[1], reverse=True)
+        return scored_links
+    
+    def _calculate_keyword_relevance(
+        self, 
+        link: Dict[str, str], 
+        keywords: List[str]
+    ) -> float:
+        """Calculate how relevant a link is to the target keywords"""
+        if not keywords:
+            return 0.5
+        
+        url_text = link['url'].lower()
+        link_text = link['text'].lower()
+        combined_text = f"{url_text} {link_text}"
+        
+        matches = 0
+        for keyword in keywords:
+            keyword_lower = keyword.lower()
+            if keyword_lower in combined_text:
+                matches += 1
+        
+        return min(matches / len(keywords), 1.0)
+    
+    def _format_combined_context(self, results: List[ExaResult]) -> str:
+        """Format multiple results as combined context"""
+        if not results:
+            return ""
+        
+        main_result = results[0]
+        context_parts = [
+            f"# {main_result.title}",
+            f"**Main URL:** {main_result.url}",
+        ]
+        
+        if main_result.author:
+            context_parts.append(f"**Author:** {main_result.author}")
+        
+        if main_result.summary:
+            context_parts.append(f"\n## Main Page Summary\n{main_result.summary}")
+        
+        # Add subpages if any
+        if len(results) > 1:
+            context_parts.append(f"\n## Related Subpages ({len(results)-1} found)")
+            for i, subpage in enumerate(results[1:], 1):
+                context_parts.append(f"\n### {i}. {subpage.title}")
+                context_parts.append(f"**URL:** {subpage.url}")
+                if subpage.summary:
+                    context_parts.append(f"**Summary:** {subpage.summary}")
+        
+        context_parts.append(f"\n## Main Content\n{main_result.text}")
+        
+        # Add subpage content
+        for i, subpage in enumerate(results[1:], 1):
+            context_parts.append(f"\n## Subpage {i}: {subpage.title}\n{subpage.text}")
+        
+        return "\n".join(context_parts)
+    
+    async def extract_links_only(
+        self, 
+        url: str, 
+        filter_keywords: Optional[List[str]] = None,
+        max_links: int = 20
+    ) -> List[Dict[str, str]]:
+        """Extract links from a URL without full content processing"""
+        try:
+            html_content, error_msg, success = await self.crawler.crawl_url(url)
+            
+            if not success:
+                logger.error(f"Failed to crawl {url}: {error_msg}")
+                return []
+            
+            # Extract links
+            links = self.extractor.extract_links_from_html(html_content, url)
+            
+            # Filter by keywords if provided
+            if filter_keywords:
+                filtered_links = []
+                for link in links:
+                    relevance = self._calculate_keyword_relevance(link, filter_keywords)
+                    if relevance > 0:
+                        filtered_links.append(link)
+                links = filtered_links
+            
+            return links[:max_links]
+            
+        except Exception as e:
+            logger.error(f"Failed to extract links from {url}: {e}")
+            return []
+    
+    async def get_content_preview(
+        self, 
+        url: str, 
+        max_chars: int = 500
+    ) -> Optional[Dict[str, str]]:
+        """Get a quick preview of webpage content"""
+        try:
+            html_content, error_msg, success = await self.crawler.crawl_url(url)
+            
+            if not success:
+                return None
+            
+            # Quick extraction without full processing
+            extraction_result, success = self.extractor.extract_content(html_content, url)
+            
+            if not success:
+                return None
+            
+            article = extraction_result['article']
+            preview_content = article['textContent'][:max_chars]
+            
+            return {
+                'title': article['title'],
+                'content': preview_content,
+                'url': url
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to preview {url}: {e}")
+            return None
 
 def main():
     """CLI interface for BerryExa"""
