@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: pgvector/pgvector:pg16
@@ -49,7 +47,7 @@ services:
 
   mcp-server:
     build: .
-    command: ["node", "mcp_servers/vector_db_server.js"]
+    command: ["node", "dist/vector_db_server.js"]
     environment:
       - DATABASE_URL=postgresql://berryrag:berryrag_password@postgres:5432/berryrag
       - OPENAI_API_KEY=${OPENAI_API_KEY}

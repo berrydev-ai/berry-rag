@@ -34,7 +34,7 @@ RETURNS TABLE (
     title TEXT,
     content TEXT,
     chunk_id INTEGER,
-    timestamp TIMESTAMP WITH TIME ZONE,
+    doc_timestamp TIMESTAMP WITH TIME ZONE,
     metadata JSONB,
     content_hash TEXT,
     similarity FLOAT

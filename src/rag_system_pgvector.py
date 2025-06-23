@@ -141,6 +141,22 @@ class BerryRAGSystem:
         try:
             with self._get_connection() as conn:
                 with conn.cursor() as cur:
+                    # Wait for database to be ready and check if system_config exists
+                    max_retries = 10
+                    for attempt in range(max_retries):
+                        try:
+                            cur.execute("SELECT 1 FROM system_config LIMIT 1")
+                            break
+                        except psycopg2.errors.UndefinedTable:
+                            if attempt < max_retries - 1:
+                                logger.info(f"Waiting for database initialization... (attempt {attempt + 1}/{max_retries})")
+                                import time
+                                time.sleep(2)
+                                continue
+                            else:
+                                logger.error("Database initialization incomplete - system_config table not found")
+                                raise
+                    
                     # Check if we need to update the embedding dimension
                     cur.execute("SELECT value FROM system_config WHERE key = 'embedding_dimension'")
                     result = cur.fetchone()
@@ -326,7 +342,9 @@ class BerryRAGSystem:
                 with conn.cursor() as cur:
                     # Use the PostgreSQL function for similarity search
                     cur.execute("""
-                        SELECT * FROM search_similar_documents(%s, %s, %s)
+                        SELECT id, url, title, content, chunk_id, 
+                               doc_timestamp as timestamp, metadata, content_hash, similarity 
+                        FROM search_similar_documents(%s, %s, %s)
                     """, (query_embedding_list, similarity_threshold, top_k))
                     
                     rows = cur.fetchall()
