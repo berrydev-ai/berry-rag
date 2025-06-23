@@ -77,6 +77,26 @@ berry-rag/
 
 ## 🔧 Commands
 
+### Streamlit Web Interface
+
+Launch the web interface for easy interaction with your RAG system:
+
+```bash
+# Start the Streamlit web interface
+python run_streamlit.py
+
+# Or directly with streamlit
+streamlit run streamlit_app.py
+```
+
+The web interface provides:
+
+- **🔍 Search**: Interactive document search with similarity controls
+- **📄 Context**: Generate formatted context for AI assistants
+- **➕ Add Document**: Upload files or paste content directly
+- **📚 List Documents**: Browse your document library
+- **📊 Statistics**: System health and performance metrics
+
 ### NPM Scripts
 
 | Command                   | Description                             |
