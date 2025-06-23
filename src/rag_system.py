@@ -147,11 +147,9 @@ class BerryRAGSystem:
                     content_hash TEXT
                 )
             ''')
-            conn.execute('''
-                CREATE INDEX IF NOT EXISTS idx_url ON documents(url);
-                CREATE INDEX IF NOT EXISTS idx_timestamp ON documents(timestamp);
-                CREATE INDEX IF NOT EXISTS idx_content_hash ON documents(content_hash);
-            ''')
+            conn.execute('CREATE INDEX IF NOT EXISTS idx_url ON documents(url)')
+            conn.execute('CREATE INDEX IF NOT EXISTS idx_timestamp ON documents(timestamp)')
+            conn.execute('CREATE INDEX IF NOT EXISTS idx_content_hash ON documents(content_hash)')
             conn.commit()
     
     def chunk_text(self, text: str, chunk_size: int = 500, overlap: int = 50) -> List[str]:
