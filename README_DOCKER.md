@@ -20,6 +20,52 @@ This guide explains how to run BerryRAG with Docker and PostgreSQL with pgvector
    docker-compose up --build
    ```
 
+## Port Configuration
+
+You can customize the host ports for both services using environment variables:
+
+### Default Ports
+
+- **Application**: `localhost:8000`
+- **PostgreSQL**: `localhost:5432`
+
+### Custom Ports via Environment Variables
+
+1. **Set in .env file**:
+
+   ```bash
+   # Edit .env file
+   APP_PORT=8084
+   POSTGRES_PORT=5435
+
+   # Start services
+   docker-compose up --build
+   ```
+
+2. **Set via command line**:
+
+   ```bash
+   # Use custom ports for this session
+   APP_PORT=8084 POSTGRES_PORT=5435 docker-compose up --build
+   ```
+
+3. **Access services with custom ports**:
+   - Application: `http://localhost:8084`
+   - PostgreSQL: `localhost:5435`
+
+### Local Development with Custom Ports
+
+When running the application locally with custom PostgreSQL port:
+
+```bash
+# Start only PostgreSQL on custom port
+POSTGRES_PORT=5435 docker-compose up postgres
+
+# Connect locally with custom port
+export DATABASE_URL="postgresql://berryrag:berryrag_password@localhost:5435/berryrag"
+python src/rag_system_pgvector.py stats
+```
+
 ## Architecture
 
 - **PostgreSQL with pgvector**: Vector database for embeddings
@@ -98,6 +144,8 @@ context = rag.get_context_for_query("your query")
 | `CHUNK_OVERLAP`        | `50`                                                             | Overlap between chunks                              |
 | `DEFAULT_TOP_K`        | `5`                                                              | Default number of search results                    |
 | `SIMILARITY_THRESHOLD` | `0.1`                                                            | Minimum similarity for search results               |
+| `APP_PORT`             | `8000`                                                           | Host port for the application service               |
+| `POSTGRES_PORT`        | `5432`                                                           | Host port for the PostgreSQL service                |
 
 ## Development
 
