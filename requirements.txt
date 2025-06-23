@@ -127,6 +127,7 @@ numpy==2.3.1
     #   -r requirements.in
     #   chromadb
     #   onnxruntime
+    #   pgvector
     #   scikit-learn
     #   scipy
     #   transformers
@@ -168,6 +169,8 @@ packaging==25.0
     #   huggingface-hub
     #   onnxruntime
     #   transformers
+pgvector==0.4.1
+    # via -r requirements.in
 pillow==11.2.1
     # via sentence-transformers
 posthog==5.4.0
@@ -177,6 +180,8 @@ protobuf==5.29.5
     #   googleapis-common-protos
     #   onnxruntime
     #   opentelemetry-proto
+psycopg2-binary==2.9.10
+    # via -r requirements.in
 pyasn1==0.6.1
     # via
     #   pyasn1-modules

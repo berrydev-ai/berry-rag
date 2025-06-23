@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: berryrag
+      POSTGRES_USER: berryrag
+      POSTGRES_PASSWORD: berryrag_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U berryrag -d berryrag"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    environment:
+      - DATABASE_URL=postgresql://berryrag:berryrag_password@postgres:5432/berryrag
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-auto}
+      - RAG_STORAGE_PATH=/app/storage
+      - SCRAPED_CONTENT_PATH=/app/scraped_content
+      - MIN_CONTENT_LENGTH=${MIN_CONTENT_LENGTH:-100}
+      - MAX_CONTENT_LENGTH=${MAX_CONTENT_LENGTH:-500000}
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - DEFAULT_TOP_K=${DEFAULT_TOP_K:-5}
+      - SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.1}
+      - MAX_CONTEXT_CHARS=${MAX_CONTEXT_CHARS:-4000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./storage:/app/storage
+      - ./scraped_content:/app/scraped_content
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
