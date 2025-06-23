@@ -1,0 +1,71 @@
+# Dependencies
+node_modules/
+.npm
+.yarn/
+.pnp.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+
+# TypeScript
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Storage (comment out if you want to commit your vector database)
+storage/
+!storage/.gitkeep
+
+# Scraped content (comment out if you want to commit scraped content)
+scraped_content/
+!scraped_content/.gitkeep
+!scraped_content/PLAYWRIGHT_INSTRUCTIONS.md
+!scraped_content/sample_scraped_content.md
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp
+
+# Claude Desktop config (generated)
+claude_desktop_config.json
+
+# Model files (downloaded by sentence-transformers)
+.cache/

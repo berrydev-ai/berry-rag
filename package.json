@@ -1,0 +1,29 @@
+{
+  "name": "berry-rag",
+  "version": "1.0.0",
+  "description": "Local RAG system with Playwright MCP integration for Claude",
+  "main": "mcp_servers/vector_db_server.js",
+  "type": "module",
+  "scripts": {
+    "install-deps": "npm install && pip install -r requirements.txt",
+    "build": "tsc",
+    "start:vector-db": "node mcp_servers/vector_db_server.js",
+    "start:rag-system": "python src/rag_system.py",
+    "process-scraped": "python src/playwright_integration.py process",
+    "setup": "python src/playwright_integration.py setup",
+    "search": "python src/rag_system.py search",
+    "list-docs": "python src/rag_system.py list",
+    "dev": "tsc --watch",
+    "test": "python3 test_system.py",
+    "full-setup": "./setup.sh",
+    "status": "python3 status.py"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "keywords": ["rag", "vector-database", "mcp", "claude", "playwright"],
+  "author": "Eric Berry",
+  "license": "MIT"
+}
