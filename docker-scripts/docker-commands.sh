@@ -56,7 +56,7 @@ start_all() {
     print_status "Services running:"
     print_status "  - PostgreSQL: localhost:${POSTGRES_PORT:-5432}"
     print_status "  - RAG App: localhost:${APP_PORT:-8000}"
-    print_status "  - MCP Server: localhost:${MCP_PORT:-3000}"
+    print_status "  - MCP Server: localhost:${BERRY_RAG_PORT:-3000}"
 }
 
 # Stop all services

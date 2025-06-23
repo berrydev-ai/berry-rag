@@ -148,6 +148,10 @@ python src/playwright_integration.py stats
 
 ## 🔌 MCP Tools Available to Claude
 
+BerryRAG provides two powerful MCP servers for Claude integration:
+
+### Vector DB Server Tools
+
 - `add_document` - Add content directly to vector DB
 - `search_documents` - Search for similar content
 - `get_context` - Get formatted context for queries
@@ -155,6 +159,14 @@ python src/playwright_integration.py stats
 - `get_stats` - Vector database statistics
 - `process_scraped_files` - Process Playwright scraped content
 - `save_scraped_content` - Save content for later processing
+
+### BerryExa Server Tools
+
+- `crawl_content` - Advanced web content extraction with subpage support
+- `extract_links` - Extract internal links for subpage discovery
+- `get_content_preview` - Quick content preview without full processing
+
+📖 **For complete MCP setup and usage guide, see [BERRY_MCP.md](BERRY_MCP.md)**
 
 ## 🧠 Embedding Providers
 
