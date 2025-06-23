@@ -15,6 +15,7 @@ A complete local RAG (Retrieval-Augmented Generation) system that integrates Pla
 ## 🚀 Quick Start
 
 ### 1. Installation
+
 ```bash
 cd /Users/eberry/BerryDev/berry-rag
 
@@ -26,6 +27,7 @@ npm run setup
 ```
 
 ### 2. Configure Claude Desktop
+
 Add to your `claude_desktop_config.json`:
 
 ```json
@@ -45,6 +47,7 @@ Add to your `claude_desktop_config.json`:
 ```
 
 ### 3. Start Using
+
 ```bash
 # Example workflow:
 # 1. Scrape with Playwright MCP through Claude
@@ -74,16 +77,18 @@ berry-rag/
 ## 🔧 Commands
 
 ### NPM Scripts
-| Command | Description |
-|---------|-------------|
-| `npm run install-deps` | Install all dependencies |
-| `npm run setup` | Initialize directories and instructions |
-| `npm run build` | Compile TypeScript MCP server |
-| `npm run process-scraped` | Process scraped files into vector DB |
-| `npm run search` | Search the knowledge base |
-| `npm run list-docs` | List all documents |
+
+| Command                   | Description                             |
+| ------------------------- | --------------------------------------- |
+| `npm run install-deps`    | Install all dependencies                |
+| `npm run setup`           | Initialize directories and instructions |
+| `npm run build`           | Compile TypeScript MCP server           |
+| `npm run process-scraped` | Process scraped files into vector DB    |
+| `npm run search`          | Search the knowledge base               |
+| `npm run list-docs`       | List all documents                      |
 
 ### Python CLI
+
 ```bash
 # RAG System Operations
 python src/rag_system.py search "query"
@@ -101,16 +106,19 @@ python src/playwright_integration.py stats
 ## 🤖 Usage with Claude
 
 ### 1. Scraping Documentation
+
 ```
 "Use Playwright to scrape the React hooks documentation from https://react.dev/reference/react and save it to the scraped_content directory"
 ```
 
 ### 2. Processing into Vector Database
+
 ```
 "Process all new scraped files and add them to the BerryRAG vector database"
 ```
 
 ### 3. Querying Knowledge Base
+
 ```
 "Search the BerryRAG database for information about React useState best practices"
 
@@ -138,19 +146,23 @@ The system supports multiple embedding providers with automatic fallback:
 ## ⚙️ Configuration
 
 ### Environment Variables
+
 ```bash
 # Optional: for OpenAI embeddings
 export OPENAI_API_KEY=your_key_here
 ```
 
 ### Content Quality Filters
+
 The system automatically filters out:
+
 - Content shorter than 100 characters
 - Navigation-only content
 - Repetitive/duplicate content
 - Files larger than 500KB
 
 ### Chunking Strategy
+
 - Default chunk size: 500 characters
 - Overlap: 50 characters
 - Smart boundary detection (sentences, paragraphs)
@@ -158,6 +170,7 @@ The system automatically filters out:
 ## 📊 Monitoring
 
 ### Check System Status
+
 ```bash
 # Vector database statistics
 python src/rag_system.py stats
@@ -170,6 +183,7 @@ python src/rag_system.py list
 ```
 
 ### Storage Information
+
 - **Database**: `storage/documents.db` (SQLite metadata)
 - **Vectors**: `storage/vectors/` (NumPy arrays)
 - **Scraped Content**: `scraped_content/` (Markdown files)
@@ -177,16 +191,19 @@ python src/rag_system.py list
 ## 🔍 Example Workflows
 
 ### Academic Research
+
 1. Scrape research papers with Playwright
 2. Process into vector database
 3. Query for specific concepts across all papers
 
 ### Documentation Management
+
 1. Scrape API documentation from multiple sources
 2. Build unified searchable knowledge base
 3. Get contextual answers about implementation details
 
 ### Content Aggregation
+
 1. Scrape blog posts and articles
 2. Create topic-based knowledge clusters
 3. Find related content across sources
@@ -194,16 +211,19 @@ python src/rag_system.py list
 ## 🛠️ Development
 
 ### Building the MCP Server
+
 ```bash
 npm run build
 ```
 
 ### Running in Development Mode
+
 ```bash
 npm run dev  # TypeScript watch mode
 ```
 
 ### Testing
+
 ```bash
 # Test RAG system
 python src/rag_system.py stats
@@ -220,11 +240,13 @@ node mcp_servers/vector_db_server.js
 ### Common Issues
 
 **Python dependencies missing:**
+
 ```bash
 pip install -r requirements.txt
 ```
 
 **TypeScript compilation errors:**
+
 ```bash
 npm install
 npm run build
@@ -234,11 +256,13 @@ npm run build
 The first run downloads sentence-transformers model (~90MB). This is normal.
 
 **No results from search:**
+
 - Check if documents were processed: `python src/rag_system.py list`
 - Verify content quality filters aren't too strict
 - Try broader search terms
 
 ### Logs and Debugging
+
 - Python logs: Check console output
 - MCP server logs: Stderr output
 - Processing status: `scraped_content/.processed_files.json`
