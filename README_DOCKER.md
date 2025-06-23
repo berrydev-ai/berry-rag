@@ -48,7 +48,8 @@ You can customize the host ports for all services using environment variables:
    # Edit .env file
    APP_PORT=8084
    POSTGRES_PORT=5435
-   MCP_PORT=3001
+   BERRY_RAG_PORT=3001
+   BERRY_EXA_PORT=3002
 
    # Start services
    docker-compose up --build
@@ -58,13 +59,14 @@ You can customize the host ports for all services using environment variables:
 
    ```bash
    # Use custom ports for this session
-   APP_PORT=8084 POSTGRES_PORT=5435 MCP_PORT=3001 docker-compose up --build
+   APP_PORT=8084 POSTGRES_PORT=5435 BERRY_RAG_PORT=3001 BERRY_EXA_PORT=3002 docker-compose up --build
    ```
 
 3. **Access services with custom ports**:
    - Application: `http://localhost:8084`
    - PostgreSQL: `localhost:5435`
-   - MCP Server: `localhost:3001`
+   - BerryRAG MCP Server: `localhost:3001`
+   - BerryExa MCP Server: `localhost:3002`
 
 ### Local Development with Custom Ports
 
@@ -205,7 +207,8 @@ context = rag.get_context_for_query("your query")
 | `SIMILARITY_THRESHOLD`             | `0.1`                                                            | Minimum similarity for search results               |
 | `APP_PORT`                         | `8000`                                                           | Host port for the application service               |
 | `POSTGRES_PORT`                    | `5432`                                                           | Host port for the PostgreSQL service                |
-| `MCP_PORT`                         | `3000`                                                           | Host port for the MCP server                        |
+| `BERRY_RAG_PORT`                   | `3000`                                                           | Host port for the BerryRAG MCP server               |
+| `BERRY_EXA_PORT`                   | `3001`                                                           | Host port for the BerryExa MCP server               |
 | `PLAYWRIGHT_BROWSERS_PATH`         | `/ms-playwright`                                                 | Path for Playwright browser binaries                |
 | `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` | `0`                                                              | Skip browser download (0=download, 1=skip)          |
 

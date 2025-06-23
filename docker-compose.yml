@@ -71,7 +71,7 @@ services:
       app:
         condition: service_started
     ports:
-      - "${MCP_PORT:-3000}:3000"
+      - "${BERRY_RAG_PORT:-3000}:3000"
 
   playwright-service:
     build: .
@@ -101,6 +101,40 @@ services:
       postgres:
         condition: service_healthy
     restart: "no"  # Run once for processing
+
+  berry-exa-server:
+    build: .
+    command: ["python", "mcp_servers/berry_exa_server.py"]
+    environment:
+      - DATABASE_URL=postgresql://berryrag:berryrag_password@postgres:5432/berryrag
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-auto}
+      - RAG_STORAGE_PATH=/app/storage
+      - SCRAPED_CONTENT_PATH=/app/scraped_content
+      - MIN_CONTENT_LENGTH=${MIN_CONTENT_LENGTH:-100}
+      - MAX_CONTENT_LENGTH=${MAX_CONTENT_LENGTH:-500000}
+      - CHUNK_SIZE=${CHUNK_SIZE:-500}
+      - CHUNK_OVERLAP=${CHUNK_OVERLAP:-50}
+      - DEFAULT_TOP_K=${DEFAULT_TOP_K:-5}
+      - SIMILARITY_THRESHOLD=${SIMILARITY_THRESHOLD:-0.1}
+      - MAX_CONTEXT_CHARS=${MAX_CONTEXT_CHARS:-4000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Playwright configuration for web crawling
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+    volumes:
+      - ./storage:/app/storage
+      - ./scraped_content:/app/scraped_content
+      - playwright_browsers:/ms-playwright
+    depends_on:
+      postgres:
+        condition: service_healthy
+      app:
+        condition: service_started
+    ports:
+      - "${BERRY_EXA_PORT:-3001}:3001"
+    stdin_open: true
+    tty: true
 
 volumes:
   postgres_data:
